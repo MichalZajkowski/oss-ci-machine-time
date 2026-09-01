@@ -1,0 +1,14 @@
+# Ten high-criticality projects across different ecosystems.
+# A project that shows jobs=0 does not use GitHub Actions. That is a
+# separate finding, not an error: part of critical open source runs its
+# CI elsewhere and is invisible to this method.
+systemd/systemd
+curl/curl
+openssl/openssl
+python/cpython
+nodejs/node
+rust-lang/rust
+llvm/llvm-project
+protocolbuffers/protobuf
+grpc/grpc
+libgit2/libgit2
