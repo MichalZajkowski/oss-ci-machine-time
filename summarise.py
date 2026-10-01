@@ -5,8 +5,8 @@ import json, sys, collections
 path = sys.argv[1] if len(sys.argv) > 1 else "results.jsonl"
 rows = [json.loads(l) for l in open(path, encoding="utf-8")]
 
-GH_STANDARD_RATE = 0.006   # USD/min, GitHub's published standard-runner price
-PLATFORM_RATE = 0.002      # USD/min, the platform charge that also covers self-hosted runners
+GH_STANDARD_RATE = 0.006   # USD/min, GitHub's Linux 2-core list price; public repos run on 4-CPU runners, so this understates
+PLATFORM_RATE = 0.002      # USD/min, self-hosted platform charge announced Dec 2025, postponed; public repos excluded
 
 print(f"{'repo':<28}{'jobs':>7}{'machine min':>14}{'billable':>10}{'not-GitHub min':>16}{'%':>7}")
 print("-" * 82)
@@ -40,9 +40,9 @@ for k in ("github-standard", "github-larger", "not-github", "unknown"):
           f"{100*sec_by_owner[k]/max(tm,.001):>5.1f}%")
 print()
 print("Priced at GitHub's own published rates. This is a conversion, not a bill:")
-print(f"  {tm:,.0f} min x {GH_STANDARD_RATE} USD/min (standard runner) = {tm*GH_STANDARD_RATE:>10,.2f} USD")
-print(f"  {tm:,.0f} min x {PLATFORM_RATE} USD/min (platform charge)   = {tm*PLATFORM_RATE:>10,.2f} USD")
-print(f"  Actually billed by GitHub:                        {tb:>10,.2f} min")
+print(f"  {tm:,.0f} min x {GH_STANDARD_RATE} USD/min (Linux 2-core list price)              = {tm*GH_STANDARD_RATE:>10,.2f} USD")
+print(f"  {tm:,.0f} min x {PLATFORM_RATE} USD/min (postponed charge, never public repos) = {tm*PLATFORM_RATE:>10,.2f} USD")
+print(f"  `billable` field, zero by definition in public repos: {tb:>10,.2f} min")
 print()
 print("Named ownership, straight from the API:")
 seen = set()
@@ -66,3 +66,4 @@ print(" 2. Machine time is summed job duration, not wall clock. Jobs run in para
 print(" 3. The prices above are a conversion at published rates, not money anyone paid.")
 print(" 4. 'not-GitHub' means the runner is outside GitHub's fleet, which is not the same as")
 print("    'self-hosted by the project'. Only the group name can tell you which.")
+print(" 5. 'billable' is zero by definition in public repositories (GitHub docs): it cannot show who pays.")

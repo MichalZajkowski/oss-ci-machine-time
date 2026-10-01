@@ -13,9 +13,9 @@ aforementioned permissions if only public resources are requested", so a classic
 no scopes selected is enough.
 
 Sources, all public and documented:
-    GET /repos/{r}/actions/runs              inventory of runs; total_count is capped at 40,000
+    GET /repos/{r}/actions/runs              inventory of runs; filtered by created=, at most 1,000 results per search
     GET /repos/{r}/actions/runs/{id}/jobs     per-job duration, labels, runner name and group
-    GET /repos/{r}/actions/runs/{id}/timing   the billable field, GitHub's own accounting
+    GET /repos/{r}/actions/runs/{id}/timing   the billable field; zero in public repos by GitHub's definition (README)
 """
 import argparse, json, os, sys, time, urllib.request, urllib.error
 from datetime import datetime, timedelta, timezone
@@ -123,7 +123,7 @@ def probe(repo, days, max_runs):
         if not ok or not data:
             out["errors"] += 1; break
         if out["runs_total_reported"] is None:
-            out["runs_total_reported"] = data.get("total_count")     # capped at 40,000 by GitHub
+            out["runs_total_reported"] = data.get("total_count")     # as reported; not capped (LLVM: 272,786)
         runs = data.get("workflow_runs", [])
         if not runs:
             break
@@ -214,7 +214,7 @@ def main():
         fh.write(json.dumps(r, ensure_ascii=False) + "\n"); fh.flush()
         n = max(r["jobs"], 1)
         print(f"[{i}/{len(repos)}] {repo}")
-        print(f"    runs={r['runs_fetched']} (GitHub reports {r['runs_total_reported']}, capped at 40000)"
+        print(f"    runs={r['runs_fetched']} (GitHub reports {r['runs_total_reported']})"
               f"  jobs={r['jobs']}  errors={r['errors']}  {time.time()-t0:.0f}s")
         print(f"    machine time={r['machine_seconds']/60:,.1f} min | elapsed={r['run_duration_ms']/60000:,.1f} min"
               f" | BILLABLE={r['billable_ms']/60000:,.1f} min {r['billable_per_os'] or ''}")
