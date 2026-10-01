@@ -14,7 +14,7 @@ For a list of repositories, for the N most recent workflow runs of each:
 |---|---|---|
 | machine time | `/actions/runs/{id}/jobs` | summed job duration, the compute actually consumed |
 | what GitHub reports as billable | `/actions/runs/{id}/timing` | the `billable` field; zero by definition in public repositories (limitation 6) |
-| who owns the runner | `runner_group_name` on each job | GitHub's standard fleet, its paid larger runners, or somebody else's hardware |
+| who owns the runner | `runner_group_name` and labels on each job | GitHub's standard fleet, its paid larger runners, or somebody else's hardware |
 
 Everything comes from documented, public REST endpoints. Nothing is scraped.
 
@@ -28,7 +28,7 @@ Ten critical projects, the 50 most recent workflow runs of each: 500 runs, **6,6
 **0.0 in ten cases out of ten**, which is what GitHub's documentation says to expect in public
 repositories (limitation 6).
 
-Split by who owns the machine, resolved from `runner_group_name`:
+Split by who owns the machine, classified by `runner_group_name` and checked against job labels:
 
 | Owner | Jobs | Machine minutes | Share |
 |---|---|---|---|
@@ -36,15 +36,16 @@ Split by who owns the machine, resolved from `runner_group_name`:
 | GitHub, larger runners (its paid tier) | 454 | 3,427.9 | 4.0% |
 | **Not GitHub** | **29** | **878.9** | **1.0%** |
 
-Three of the ten projects use hardware GitHub does not own, and the API names it:
+Three of the ten projects run jobs on hardware GitHub does not own, and the runner groups and
+labels show where:
 
 - **Rust** runs jobs in a group it calls `gha-self-hosted`, with labels naming EC2 instance
   types (`c8a.8xlarge`, `m8a.2xlarge`, `c9g.4xlarge` on aarch64), and separately on AWS
   CodeBuild (`codebuild-ubuntu-22-36c-…`).
 - **LLVM** runs macOS/ARM64 jobs in a group called `llvm-macos-apple`, whose labels literally
   read `self-hosted, macOS, ARM64, apple-runners`.
-- **systemd** runs `ppc64le` and `s390x` jobs in the `default` group, which means they are not
-  GitHub's fleet. **Public data does not reveal who owns them.**
+- **systemd** runs `ppc64le` and `s390x` jobs, architectures GitHub does not offer as hosted
+  runners, in the `default` group. **Public data does not reveal who owns them.**
 
 `billable` is zero for all of it, GitHub's own hardware and everyone else's alike, including the
 larger runners GitHub does charge for. That is a property of the field, not a finding (limitation 6).
@@ -52,9 +53,10 @@ larger runners GitHub does charge for. That is a property of the field, not a fi
 ## Limitations, stated plainly
 
 1. The sample is the **N most recent runs per project**, not a time window and not a random
-   sample. **This matters more than it sounds.** Two runs of this probe over the same ten
-   projects, a day apart, gave 69,404 and 85,221 minutes; on individual projects the gap
-   reached a factor of five. Do not quote a single figure as if it were stable, and do not
+   sample. **This matters more than it sounds.** Judged against the number of runs GitHub
+   reports for the preceding 30 days, the 50 runs covered roughly eight minutes of LLVM's
+   activity and roughly ten days of libgit2's (an estimate that assumes runs were spread
+   evenly over the month). Do not quote a single figure as if it were stable, and do not
    extrapolate to a month by multiplying.
 2. **Machine time is the sum of job durations**, not wall clock. Jobs run in parallel, so this
    number is larger than a run's elapsed time and it is the right measure of compute.
@@ -95,8 +97,8 @@ jobs needs a higher value before its ownership split is proof rather than infere
 `summarise.py` tells you which repositories were truncated.
 
 Budget roughly `repos * (max_runs/100 + 2*max_runs)` API calls. Ten repositories at 50 runs is
-about 1,010 calls and twenty minutes. The script appends to its output file after each
-repository and resumes where it stopped.
+about 1,010 calls; the script estimates its own run time. It appends to its output file after
+each repository and resumes where it stopped.
 
 ## Licence
 
@@ -105,7 +107,8 @@ Code: MIT. Data in `data/`: CC0, it is derived entirely from public API response
 ## A note on tooling
 
 The measurement, the questions it asks and the reading of its results are mine. I used Claude
-(Anthropic) to write and debug the scripts, to check sources, and to edit this README.
+(Anthropic) to write and debug the scripts, to check sources, and to draft and edit this README,
+including the corrections of 1 October 2026.
 
 ## Corrections
 
@@ -116,3 +119,17 @@ The measurement, the questions it asks and the reading of its results are mine. 
   and in `summarise.py` (USD 0.006 a minute is GitHub's Linux 2-core price, while Linux standard
   runners in public repositories have 4 CPUs; the self-hosted platform charge was postponed).
   The repository as it stood for the pilot run is tagged `pilot-2026-09-01`.
+- **1 October 2026, second set.** Limitation 1 compared this run with a second run that was not
+  published; it now relies only on data in this repository. The systemd entry no longer infers
+  from the `default` group alone that these runners are outside GitHub's fleet: GitHub's larger
+  runners can be assigned to that group too, and what places these jobs outside GitHub's fleet is
+  their architecture, which GitHub does not offer as hosted runners. The docstring of `classify()`
+  in `probe.py` now calls the group-name rule a heuristic, confirmed in this pilot by job labels;
+  the classification logic and the numbers are unchanged. Smaller fixes in comments and messages:
+  standard-runner CPU counts and "group name and labels" in `summarise.py`, the rate-limit message
+  in `probe.py`, and the run-time estimate and the note on tooling in this README. The sentence
+  introducing the three projects no longer says the API names the owner, and the table of signals,
+  the line above the ownership split and the heading of the runner list in `summarise.py` now name
+  runner groups and job labels together. The first set said Linux standard runners in public
+  repositories have 4 CPUs; the single-CPU `ubuntu-slim` runner, used by 119 jobs in this pilot, is
+  an exception.

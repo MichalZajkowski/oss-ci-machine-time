@@ -87,11 +87,16 @@ def seconds(a, b):
 
 
 def classify(job):
-    """Three categories instead of a guess. runner_group_name decides, not the label.
+    """Three categories instead of a guess, decided by runner_group_name, not the label.
 
-    A runner registered by a repository or an organisation lands in the group 'default'
-    unless someone names it otherwise, so anything that is neither GitHub's standard fleet
-    nor its larger-runner tier is hardware GitHub does not own.
+    The group name is a heuristic, not proof of ownership. A repository's or an
+    organisation's own runners land in the group 'default' unless someone names it
+    otherwise, but GitHub's larger runners are also assigned to the default group unless
+    their owner picks another one. So 'not-github' means: neither GitHub's standard fleet
+    nor a group whose name marks it as larger runners. In the pilot run of 1 September
+    2026 every job classified 'not-github' also carries labels that confirm it (ppc64le
+    and s390x images, EC2 instance types, CodeBuild, 'self-hosted'). Check the labels in
+    the samples before relying on the split in a new run.
     """
     group = (job.get("runner_group_name") or "").strip()
     name = (job.get("runner_name") or "").strip()
@@ -192,7 +197,7 @@ def main():
     if not repos:
         repos = ["systemd/systemd"]
     if not TOKEN:
-        print("No GITHUB_TOKEN: the limit is 60 requests an hour, enough for about one repo.\n", flush=True)
+        print("No GITHUB_TOKEN: the limit is 60 requests an hour; this script then handles about 20 runs of one repo per hour.\n", flush=True)
 
     est = len(repos) * (max(1, a.max_runs // 100) + 2 * a.max_runs)
     print(f"Plan: {len(repos)} repos, up to {a.max_runs} runs each, {a.days} day window.")

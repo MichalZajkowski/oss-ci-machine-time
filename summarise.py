@@ -5,7 +5,7 @@ import json, sys, collections
 path = sys.argv[1] if len(sys.argv) > 1 else "results.jsonl"
 rows = [json.loads(l) for l in open(path, encoding="utf-8")]
 
-GH_STANDARD_RATE = 0.006   # USD/min, GitHub's Linux 2-core list price; public repos run on 4-CPU runners, so this understates
+GH_STANDARD_RATE = 0.006   # USD/min, GitHub's Linux 2-core list price; most Linux and Windows standard runners in public repos have 4 CPUs (ubuntu-slim has 1), so this mostly understates
 PLATFORM_RATE = 0.002      # USD/min, self-hosted platform charge announced Dec 2025, postponed; public repos excluded
 
 print(f"{'repo':<28}{'jobs':>7}{'machine min':>14}{'billable':>10}{'not-GitHub min':>16}{'%':>7}")
@@ -44,7 +44,7 @@ print(f"  {tm:,.0f} min x {GH_STANDARD_RATE} USD/min (Linux 2-core list price)  
 print(f"  {tm:,.0f} min x {PLATFORM_RATE} USD/min (postponed charge, never public repos) = {tm*PLATFORM_RATE:>10,.2f} USD")
 print(f"  `billable` field, zero by definition in public repos: {tb:>10,.2f} min")
 print()
-print("Named ownership, straight from the API:")
+print("Runner groups and labels, straight from the API:")
 seen = set()
 for r in rows:
     for s in r["samples"]:
@@ -65,5 +65,5 @@ print(" 1. The sample is the N most recent runs per project. Not a time window, 
 print(" 2. Machine time is summed job duration, not wall clock. Jobs run in parallel.")
 print(" 3. The prices above are a conversion at published rates, not money anyone paid.")
 print(" 4. 'not-GitHub' means the runner is outside GitHub's fleet, which is not the same as")
-print("    'self-hosted by the project'. Only the group name can tell you which.")
+print("    'self-hosted by the project'. Only the group name and labels can tell you which.")
 print(" 5. 'billable' is zero by definition in public repositories (GitHub docs): it cannot show who pays.")
