@@ -36,6 +36,9 @@ Split by who owns the machine, classified by `runner_group_name` and checked aga
 | GitHub, larger runners (its paid tier) | 454 | 3,427.9 | 4.0% |
 | **Not GitHub** | **29** | **878.9** | **1.0%** |
 
+I do not add up or compare these shares across projects; the table is here for the reader of
+this repository.
+
 Three of the ten projects run jobs on hardware GitHub does not own, and the runner groups and
 labels show where:
 
@@ -45,7 +48,9 @@ labels show where:
 - **LLVM** runs macOS/ARM64 jobs in a group called `llvm-macos-apple`, whose labels literally
   read `self-hosted, macOS, ARM64, apple-runners`.
 - **systemd** runs `ppc64le` and `s390x` jobs, architectures GitHub does not offer as hosted
-  runners, in the `default` group. **Public data does not reveal who owns them.**
+  runners, in the `default` group. The runner groups and labels do not name the owner; systemd's
+  own repository does: commit `8a1d134` (4 July 2025) says the `ppc64le` workers came from IBM,
+  and the linter configuration attributes the `s390x` runners to IBM as well.
 
 `billable` is zero for all of it, GitHub's own hardware and everyone else's alike, including the
 larger runners GitHub does charge for. That is a property of the field, not a finding (limitation 6).
@@ -61,8 +66,8 @@ larger runners GitHub does charge for. That is a property of the field, not a fi
 2. **Machine time is the sum of job durations**, not wall clock. Jobs run in parallel, so this
    number is larger than a run's elapsed time and it is the right measure of compute.
 3. "Outside GitHub's fleet" is not the same as "self-hosted by the project", and neither is the
-   same as "donated". Only the group name and labels can tell you which, and for systemd they
-   do not.
+   same as "donated". Only the group name and labels can tell you which; for systemd, the
+   project's own repository does.
 4. GitHub's **larger runners are still GitHub's hardware**, and they are a paid tier: GitHub's
    billing documentation states that they "are always charged for, even when used by public
    repositories" ([docs](https://docs.github.com/en/billing/concepts/product-billing/github-actions),
@@ -77,6 +82,9 @@ larger runners GitHub does charge for. That is a property of the field, not a fi
    accessed 1 October 2026). In this pilot the field stays at zero even for the 454 larger-runner
    jobs, which GitHub charges for, and GitHub announced on 2 February 2025 that the endpoint
    behind it is closing down ([changelog](https://github.blog/changelog/2025-02-02-actions-get-workflow-usage-and-get-workflow-run-usage-endpoints-closing-down/)).
+7. Jobs still running when the probe runs are skipped (no `completed_at`). For the most active
+   projects, whose 50 runs span minutes, this drops the longest jobs, so their machine time is
+   undercounted; the size of the gap is not measured.
 
 ## Running it
 
@@ -133,3 +141,10 @@ including the corrections of 1 October 2026.
   runner groups and job labels together. The first set said Linux standard runners in public
   repositories have 4 CPUs; the single-CPU `ubuntu-slim` runner, used by 119 jobs in this pilot, is
   an exception.
+- **26 October 2026.** The systemd entry no longer says that public data does not reveal who owns
+  its `ppc64le` and `s390x` runners: systemd's own repository attributes them to IBM, the `ppc64le`
+  workers in commit `8a1d134` and the `s390x` runners in its linter configuration; limitation 3
+  now points to the same repository. Added limitation 7 on jobs still running when the probe
+  runs. Added a sentence under the ownership table saying that I do not add up or compare these
+  shares across projects. The scripts, the data, the classification logic and the numbers are
+  unchanged.
