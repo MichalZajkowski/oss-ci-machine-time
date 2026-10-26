@@ -66,7 +66,7 @@ larger runners GitHub does charge for. That is a property of the field, not a fi
 2. **Machine time is the sum of job durations**, not wall clock. Jobs run in parallel, so this
    number is larger than a run's elapsed time and it is the right measure of compute.
 3. "Outside GitHub's fleet" is not the same as "self-hosted by the project", and neither is the
-   same as "donated". Only the group name and labels can tell you which; for systemd, the
+   same as "donated". The group name and labels can tell you which; for systemd, the
    project's own repository does.
 4. GitHub's **larger runners are still GitHub's hardware**, and they are a paid tier: GitHub's
    billing documentation states that they "are always charged for, even when used by public
